@@ -21,7 +21,57 @@ from synthgen import *
 from common import *
 import wget, tarfile
 import cv2 as cv
-import time 
+import time
+from math import *
+import codecs
+from copy import deepcopy
+
+def dumpRotateImage(img, degree, pt1, pt2, pt3, pt4):
+    height, width = img.shape[:2]
+    heightNew = int(width * fabs(sin(radians(degree))) + height * fabs(cos(radians(degree))))
+    widthNew = int(height * fabs(sin(radians(degree))) + width * fabs(cos(radians(degree))))
+    matRotation = cv.getRotationMatrix2D((width / 2, height / 2), degree, 1)
+    matRotation[0, 2] += (widthNew - width) / 2
+    matRotation[1, 2] += (heightNew - height) / 2
+    imgRotation = cv.warpAffine(img, matRotation, (widthNew, heightNew), borderValue=(255, 255, 255))
+    pt1 = list(pt1)
+    pt3 = list(pt3)
+
+    [[pt1[0]], [pt1[1]]] = np.dot(matRotation, np.array([[pt1[0]], [pt1[1]], [1]]))
+    [[pt3[0]], [pt3[1]]] = np.dot(matRotation, np.array([[pt3[0]], [pt3[1]], [1]]))
+    imgOut = imgRotation[int(pt1[1]):int(pt3[1]), int(pt1[0]):int(pt3[0])]
+    height, width = imgOut.shape[:2]
+    return imgOut
+
+
+def text_positions_transfer(wordBB):
+    text_position=[]
+    for i in xrange(wordBB.shape[-1]):
+        bb = wordBB[:, :, i]
+        bb = np.c_[bb, bb[:, 0]]
+        #plt.plot(bb[0, :], bb[1, :], 'g', alpha=alpha)
+        tmp_line=[]
+        for j in range(4):
+            tmp_line+=[bb[0, :][j],bb[1, :][j]]
+        text_position.append(tmp_line)
+
+    return text_position
+
+
+def synthtext_part(img,wordBB):
+    text_position=text_positions_transfer(wordBB)
+    partImgs=[]
+    rand_x=np.random.randint(0,4)
+    rand_y=np.random.randint(0,3)
+    for rec in text_position:
+        pt1 = (rec[0]-rand_x, rec[1]-rand_y)
+        pt2 = (rec[2]+rand_x, rec[3]-rand_y)
+        pt3 = (rec[4]+rand_x, rec[5]+rand_y)
+        pt4 = (rec[6]-rand_x, rec[7]+rand_y)
+        partImg = dumpRotateImage(img.copy(), degrees(atan2(pt2[1] - pt1[1], pt2[0] - pt1[0])), pt1, pt2, pt3, pt4)
+        # plt.imshow(partImg), plt.colorbar(), plt.show()
+        partImgs.append(partImg)
+    return partImgs
 
 ## Define some configuration variables:
 NUM_IMG = -1 # no. of images to use for generation (-1 to use all available):
@@ -60,7 +110,6 @@ def get_data():
   # open the h5 file and return:
   return h5py.File(DB_FNAME,'r')
 
-
 def add_res_to_db(imgname,res,db):
   """
   Add the synthetically generated text image instance
@@ -95,7 +144,24 @@ def add_res_to_db(imgname,res,db):
     print 'H_channel',H.shape,H
     #img = Image.fromarray(db['data'][dname][:])
     '''
-    
+
+def add_res_to_disk(imgname,res,img_filepath,txtfile):
+  ninstance = len(res)
+  for i in xrange(ninstance):
+    img=res[i]['img']
+    wordBB=res[i]['wordBB']
+    word_tmp=res[i]['txt']
+    word_list=[]
+    for i in word_tmp:
+        word_list+=i.split('\n')
+    synthtext_imgs=synthtext_part(img.copy(),wordBB)
+    for i in range(len(synthtext_imgs)):
+      part_img=synthtext_imgs[i]
+      word=word_list[i]
+      if part_img.shape[0]>3 and part_img.shape[1]>5:
+        cv.imwrite(img_filepath+imgname+'_'+str(i)+'.jpg',cv.cvtColor(part_img, cv.COLOR_RGB2BGR))
+        txtfile.write(word+','+imgname+'_'+str(i)+'.jpg'+'\r\n')
+
 def rgb2hsv(image):
     return image.convert('HSV')
 
@@ -115,6 +181,7 @@ def main(viz=False):
   print colorize(Color.BLUE,'\t-> done',bold=True)
 
   # open the output h5 file:
+  txtfile=codecs.open('./data/words/label.txt','aw+','utf-8')
   out_db = h5py.File(OUT_FILE,'w')
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
@@ -139,7 +206,10 @@ def main(viz=False):
       #  there are 2 estimates of depth (represented as 2 "channels")
       #  here we are using the second one (in some cases it might be
       #  useful to use the other one):
-      img_resize=img.resize(db['depth'][imname].shape)
+      print img.size
+      print db['depth'][imname].shape
+      print type(db['depth'][imname])
+      img_resize=img.resize(db['depth'][imname].shape[-2:])
       depth = db['depth'][imname][:].T
       print 'depth shape,img shape',depth.shape,np.array(img).shape
       print 'depth info',depth
@@ -181,6 +251,9 @@ def main(viz=False):
       area = db['seg'][imname].attrs['area']
       label = db['seg'][imname].attrs['label']
       
+      print 'area',area
+      print 'label',label
+      
       print 'seg info',seg.shape,area.shape,label.shape
       # re-size uniformly:
       sz = depth.shape[:2][::-1]
@@ -198,6 +271,7 @@ def main(viz=False):
         if len(res) > 0:  
             # non-empty : successful in placing text:
             add_res_to_db(imname,res,out_db)
+            add_res_to_disk(imname,deepcopy(res),'./data/imgs/',txtfile)
             break
         else:
             res = RV3.render_text(img,depth,seg,area,label,

@@ -1,3 +1,4 @@
+#coding=utf-8
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -15,8 +16,9 @@ from PIL import Image
 import math
 from common import *
 
-def is_chinese(ch):    
-    #uc=ch.decode('utf-8')     
+def is_chinese(ch):
+    #print ch
+    #uc=ch.decode("utf-8")
     if u'\u4e00' <= ch<=u'\u9fff':
         return True
     else:
@@ -97,9 +99,9 @@ class RenderFont(object):
         self.max_shrink_trials = 5 # 0.9^5 ~= 0.6
         # the minimum number of characters that should fit in a mask
         # to define the maximum font height.
-        self.min_nchar = 1
-        self.min_font_h = 16 #px : 0.6*12 ~ 7px <= actual minimum height
-        self.max_font_h = 120 #px
+        self.min_nchar = 8
+        self.min_font_h = 26 #px : 0.6*12 ~ 7px <= actual minimum height
+        self.max_font_h = 60 #px
         self.p_flat = 0.10
 
         # curved baseline:
@@ -107,8 +109,7 @@ class RenderFont(object):
         self.baselinestate = BaselineState()
 
         # text-source : gets english text:
-        self.text_source = TextSource(min_nchar=self.min_nchar,
-                                      fn=osp.join(data_dir,'newsgroup/'))
+        self.text_source = TextSource(min_nchar=self.min_nchar,fn=osp.join(data_dir,'text_source/'))
 
         # get font-state object:
         self.font_state = FontState(data_dir)
@@ -422,7 +423,7 @@ class FontState(object):
     border = 0.25
     random_caps = -1 ## don't recapitalize : retain the capitalization of the lexicon
     capsmode = [str.lower, str.upper, str.capitalize]  # lower case, upper case, proper noun
-    curved = 0.2
+    curved = 0.1
     random_kerning = 0.2
     random_kerning_amount = 0.1
 
@@ -528,28 +529,24 @@ class TextSource(object):
                       'LINE':self.sample_line,
                       'PARA':self.sample_para}
         files= os.listdir(fn)
-        files=files[0:-1]
+        #files = files[0:-1]
         #print files
         random.shuffle(files)
-        filecnt=10
         self.txt=[]
         for filename in files:
-            filecnt-=1
-            if filecnt==0:
-                break            
             fc=filename.decode('utf-8')
             fc=fn+fc
-            print fc
-            with open(fc,'r') as f:
-                for l in f.readlines():
-                    line=l.strip()
-                    line=line.decode('utf-8')
-                    #print line
-                    self.txt.append(line)
+            try:
+                with open(fc,'r') as f:
+                    for l in f.readlines():
+                        line=l.strip()
+                        line=line.decode('utf-8')
+                        line = line.replace(u' ',u'')
+                        self.txt.append(line)
+            except:
+                pass
         random.shuffle(self.txt)          
         print len(self.txt)
-            #self.txt = [l.strip() for l in f.readlines()]
-            #self.txt=self.txt.decode('utf-8')
         
         # distribution over line/words for LINE/PARA:
         self.p_line_nline = np.array([0.85, 0.10, 0.05])
@@ -568,6 +565,9 @@ class TextSource(object):
         """
         chcnt=0
         line=txt#.decode('utf-8')
+        #print line
+        #print type(line)
+        #print '--------------------------------------------------------------'
         for ch in line:
             if ch.isalnum() or is_chinese(ch):
                 chcnt+=1
