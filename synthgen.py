@@ -365,15 +365,20 @@ def viz_textbb(fignum,text_im, bb_list,alpha=1.0):
 
 class RendererV3(object):
 
-    def __init__(self, data_dir, max_time=None, TextPath=None):
-        self.text_renderer = tu.RenderFont(data_dir, textsource_path=TextPath)
+    def __init__(self, data_dir, max_time=None, TextPath=None, min_char_height=16, max_text_regions=10, min_nchar = 2, min_font_h = 18, max_font_h = 36):
+        self.text_renderer = tu.RenderFont(data_dir,
+                                           textsource_path=TextPath,
+                                           min_nchar=min_nchar,
+                                           min_font_h=min_font_h,
+                                           max_font_h=max_font_h
+                                           )
         self.colorizer = Colorize(data_dir)
         # self.colorizerV2 = colorV2.Colorize(data_dir)
 
-        self.min_char_height = 8 #px
+        self.min_char_height = min_char_height #px
         self.min_asp_ratio = 0.4 #
 
-        self.max_text_regions = 7
+        self.max_text_regions = max_text_regions
 
         self.max_time = max_time
 

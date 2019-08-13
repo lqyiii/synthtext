@@ -181,7 +181,15 @@ def main(generate_count=50):
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
 
-  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG,TextPath=TEXTPATH)
+  RV3 = RendererV3(DATA_PATH,
+                   max_time=SECS_PER_IMG,
+                   TextPath=TEXTPATH,
+                   min_char_height=16,
+                   max_text_regions=10,
+                   min_nchar=2,
+                   min_font_h=18,
+                   max_font_h=36
+                   )
 
   for i in range(generate_count):
       try:

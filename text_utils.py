@@ -87,7 +87,7 @@ class RenderFont(object):
         Also, outputs ground-truth bounding boxes and text string
     """
 
-    def __init__(self, data_dir='data', textsource_path=None):
+    def __init__(self, data_dir='data', textsource_path=None, min_nchar = 2, min_font_h = 18, max_font_h = 36):
         # distribution over the type of text:
         # whether to get a single word, paragraph or a line:
         self.p_text = {0.0 : 'WORD',
@@ -99,9 +99,9 @@ class RenderFont(object):
         self.max_shrink_trials = 5 # 0.9^5 ~= 0.6
         # the minimum number of characters that should fit in a mask
         # to define the maximum font height.
-        self.min_nchar = 8
-        self.min_font_h = 26 #px : 0.6*12 ~ 7px <= actual minimum height
-        self.max_font_h = 60 #px
+        self.min_nchar = min_nchar
+        self.min_font_h = min_font_h #px : 0.6*12 ~ 7px <= actual minimum height
+        self.max_font_h = max_font_h #px
         self.p_flat = 0.10
 
         # curved baseline:
