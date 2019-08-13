@@ -19,7 +19,6 @@ import os, sys, traceback
 import os.path as osp
 from synthgen import *
 from common import *
-import wget, tarfile
 import cv2 as cv
 import time
 from math import *

@@ -460,7 +460,7 @@ class FontState(object):
             sizes = font.get_metrics(chars,size)
             good_idx = [i for i in xrange(len(sizes)) if sizes[i] is not None]
             sizes,w = [sizes[i] for i in good_idx], w[good_idx]
-            sizes = np.array(sizes).astype('float')[:,[3,4]]        
+            sizes = np.array(sizes).astype('float')[:,[3,4]]
             r = np.abs(sizes[:,1]/sizes[:,0]) # width/height
             good = np.isfinite(r)
             r = r[good]
