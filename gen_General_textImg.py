@@ -86,6 +86,8 @@ DB_FNAME = osp.join(DATA_PATH,'dset.h5')
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
 OUT_FILE = 'results/SynthText_cartoon_viz.h5'
 
+TEXTPATH = osp.join(DATA_PATH,'text_source/')
+
 def add_res_to_db(imgname,res,db):
   """
   Add the synthetically generated text image instance
@@ -180,7 +182,7 @@ def main(generate_count=50):
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
 
-  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
+  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG,TextPath=TEXTPATH)
 
   for i in range(generate_count):
       try:

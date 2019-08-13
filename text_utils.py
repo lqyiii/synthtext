@@ -87,7 +87,7 @@ class RenderFont(object):
         Also, outputs ground-truth bounding boxes and text string
     """
 
-    def __init__(self, data_dir='data'):
+    def __init__(self, data_dir='data', textsource_path=None):
         # distribution over the type of text:
         # whether to get a single word, paragraph or a line:
         self.p_text = {0.0 : 'WORD',
@@ -109,7 +109,8 @@ class RenderFont(object):
         self.baselinestate = BaselineState()
 
         # text-source : gets english text:
-        self.text_source = TextSource(min_nchar=self.min_nchar,fn=osp.join(data_dir,'text_source/'))
+        textsource_path = osp.join(data_dir,'text_source/') if textsource_path is None else textsource_path
+        self.text_source = TextSource(min_nchar=self.min_nchar,fn=textsource_path)
 
         # get font-state object:
         self.font_state = FontState(data_dir)
@@ -541,8 +542,9 @@ class TextSource(object):
                     for l in f.readlines():
                         line=l.strip()
                         line=line.decode('utf-8')
-                        line = line.replace(u' ',u'')
-                        self.txt.append(line)
+                        # line = line.replace(u' ',u'')
+                        # self.txt.append(line)
+                        self.txt += line.split(u' ')
             except:
                 pass
         random.shuffle(self.txt)          
