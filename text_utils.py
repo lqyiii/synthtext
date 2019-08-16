@@ -508,7 +508,7 @@ class FontState(object):
         font = freetype.Font(fs['font'], size=fs['size'])
         font.underline = fs['underline']
         font.underline_adjustment = fs['underline_adjustment']
-        # font.strong = fs['strong']
+        # font.strong = fs[' ']
         font.oblique = fs['oblique']
         font.strength = fs['strength']
         char_spacing = fs['char_spacing']

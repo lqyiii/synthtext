@@ -167,7 +167,7 @@ def random_choose(imnames,db_seg,db_depth,max_index=8009):
     return rgb_img,seg,depth,img_name
 
 
-def main(generate_count=50):
+def main(generate_count=10):
   ticks_str=str(int(time.time()))
   # open databases:
   db_depth = h5py.File('./data/download/depth.h5', 'r')
@@ -229,7 +229,7 @@ def main(generate_count=50):
 
               if len(res) > 0:
                   # non-empty : successful in placing text:
-                  #add_res_to_db(img_name, res, out_db)
+                  add_res_to_db(img_name, res, out_db)
                   add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
                   break
               else:
