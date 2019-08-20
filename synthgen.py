@@ -1,3 +1,4 @@
+#coding=utf8
 # Author: Ankush Gupta
 # Date: 2015
 
@@ -546,6 +547,41 @@ class RendererV3(object):
             rnd = np.random.beta(5.0,1.0)
         return int(np.ceil(nmax * rnd))
 
+    @staticmethod
+    def intersection_point(line1=[], line2=[]):
+        # line1 list contain p1 and p2
+        p1=np.array(line1[0])  # x y
+        p2=np.array(line1[1])
+
+        p3=np.array(line2[0])
+        p4=np.array(line2[1])
+
+        try:
+            k1=float((p2-p1)[1])/float((p2-p1)[0])
+        except:
+            k1=np.inf
+            x1=p1[0]
+            k2 = float((p4 - p3)[1]) / float((p4 - p3)[0])
+            y1=k2*(x1-p3[0])+p3[1]
+            return [x1,y1]
+
+
+        try:
+            k2 = float((p4 - p3)[1]) / float((p4 - p3)[0])
+        except:
+            k2 = np.inf
+            x2 = p3[0]
+            k1=float((p2 - p1)[1]) / float((p2 - p1)[0])
+            y2 = k1 * (x2 - p1[0]) + p1[1]
+            return [x2,y2]
+
+        b1=p1[1]-k1*p1[0]
+        b2=p3[1]-k2*p3[0]
+        x_sec=(b2-b1)/(k1-k2)
+        y_sec=(k2*b1-k1*b2)/(k2-k1)
+
+        return [x_sec,y_sec]
+
     def char2wordBB(self, charBB, text):
         """
         Converts character bounding-boxes to word-level
@@ -560,7 +596,8 @@ class RendererV3(object):
         wrds = text.split()
         bb_idx = np.r_[0, np.cumsum([len(w) for w in wrds])]
         wordBB = np.zeros((2,4,len(wrds)), 'float32')
-        
+
+        # 先求出最小外接矩形
         for i in xrange(len(wrds)):
             cc = charBB[:,:,bb_idx[i]:bb_idx[i+1]]
 
@@ -584,6 +621,24 @@ class RendererV3(object):
                 dists.append(d)
             wordBB[:,:,i] = box[perm4[np.argmin(dists)],:].T
 
+        # 再求出最小外接四边形
+        for i in xrange(len(wrds)):
+            char_bbs = charBB[:, :, bb_idx[i]:bb_idx[i + 1]]
+            head_bb = char_bbs[:, :, 0]
+            tail_bb = char_bbs[:, :, -1]
+            head_bb_pts = zip(head_bb[0, :], head_bb[1, :])
+            tail_bb_pts = zip(tail_bb[0, :], tail_bb[1, :])
+
+            bb = wordBB[:,:,i]
+            word_bb_pts = zip(bb[0, :], bb[1, :])[:4]
+
+            p1_new = self.intersection_point([head_bb_pts[0], head_bb_pts[3]], [word_bb_pts[0], word_bb_pts[1]])
+            p4_new = self.intersection_point([head_bb_pts[0], head_bb_pts[3]], [word_bb_pts[2], word_bb_pts[3]])
+
+            p2_new = self.intersection_point([tail_bb_pts[1], tail_bb_pts[2]], [word_bb_pts[0], word_bb_pts[1]])
+            p3_new = self.intersection_point([tail_bb_pts[1], tail_bb_pts[2]], [word_bb_pts[2], word_bb_pts[3]])
+
+            wordBB[:, :, i] = np.array([[p1_new[0],p2_new[0],p3_new[0],p4_new[0]],[p1_new[1],p2_new[1],p3_new[1],p4_new[1]]])
         return wordBB
 
 
