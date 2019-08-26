@@ -510,7 +510,7 @@ class FontState(object):
         font.underline_adjustment = fs['underline_adjustment']
         # font.strong = fs['strong']
         font.oblique = fs['oblique']
-        font.strength = fs['strength']
+        # font.strength = fs['strength']
         char_spacing = fs['char_spacing']
         font.antialiased = True
         font.origin = True
