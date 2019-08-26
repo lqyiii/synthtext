@@ -187,7 +187,7 @@ def main(generate_count=10):
                    min_char_height=16,
                    max_text_regions=10,
                    min_nchar=2,
-                   min_font_h=18,
+                   min_font_h=24,
                    max_font_h=36
                    )
 
