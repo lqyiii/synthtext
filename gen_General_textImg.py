@@ -44,34 +44,73 @@ def dumpRotateImage(img, degree, pt1, pt2, pt3, pt4):
     return imgOut
 
 
+def length(line_vec):
+    return float(np.dot(np.array(line_vec), np.array(line_vec).T)) ** 0.5
+
+def perspective(img, pts1, pts2):
+    print pts1
+    print pts2
+    pts1 = np.float32(pts1)
+    pts2 = np.float32(pts2)
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+
+    cols, rows = pts2[-1]
+    dst = cv2.warpPerspective(img, M, (cols, rows))
+    return dst
+
 def text_positions_transfer(wordBB):
-    text_position=[]
+    text_position = []
     for i in xrange(wordBB.shape[-1]):
         bb = wordBB[:, :, i]
         bb = np.c_[bb, bb[:, 0]]
-        #plt.plot(bb[0, :], bb[1, :], 'g', alpha=alpha)
-        tmp_line=[]
+        # plt.plot(bb[0, :], bb[1, :], 'g', alpha=alpha)
+        tmp_line = []
         for j in range(4):
-            tmp_line+=[bb[0, :][j],bb[1, :][j]]
+            tmp_line += [bb[0, :][j], bb[1, :][j]]
         text_position.append(tmp_line)
 
     return text_position
 
+def intersection_angle(vec1, vec2):
+    A_dot_B = np.dot(vec1, vec2.T)
+    AB_module = (np.float(np.dot(vec1, vec1.T)) ** 0.5) * (np.float(np.dot(vec2, vec2.T)) ** 0.5)
+    radius = acos(np.float(A_dot_B) / (AB_module + 0.0001))
+    return abs(radius * 180 / pi)
+
+def calc_quad_height(pts):
+    pt1, pt2, pt3, pt4 = pts
+    vec1 = np.float32(pt3) - np.float32(pt1)
+    vec2 = np.float32(pt4) - np.float32(pt3)
+    angle = intersection_angle(vec1, vec2)
+    return sin(pi * angle / 180) * length(vec1)
 
 def synthtext_part(img,wordBB):
+    H,W = img.shape[:2]
     text_position=text_positions_transfer(wordBB)
-    partImgs=[]
+
+    idx = 0
+    partImg_info={}
     rand_x=np.random.randint(0,4)
     rand_y=np.random.randint(0,3)
     for rec in text_position:
-        pt1 = (rec[0]-rand_x, rec[1]-rand_y)
-        pt2 = (rec[2]+rand_x, rec[3]-rand_y)
-        pt3 = (rec[4]+rand_x, rec[5]+rand_y)
-        pt4 = (rec[6]-rand_x, rec[7]+rand_y)
-        partImg = dumpRotateImage(img.copy(), degrees(atan2(pt2[1] - pt1[1], pt2[0] - pt1[0])), pt1, pt2, pt3, pt4)
+        if min(rec)<0 or max(rec[0::2])>W or max(rec[1::2])>H:
+            partImg_info[idx] = {'img':None,'height':None}
+            idx+=1
+            continue
+
+        pt1 = (max(rec[0]-rand_x,0), max(rec[1]-rand_y,0))
+        pt2 = (min(rec[2]+rand_x,W), max(rec[3]-rand_y,0))
+        pt3 = (min(rec[4]+rand_x,W), min(rec[5]+rand_y,H))
+        pt4 = (max(rec[6]-rand_x,0), min(rec[7]+rand_y,H))
+        pts1 = [pt1, pt2, pt4, pt3]
+        w = length(np.float32(pt2)-np.float32(pt1))
+        h = length(np.float32(pt1)-np.float32(pt4))
+        pts2 = [[0,0],[w,0],[0,h],[w,h]]
+        partImg = perspective(img,pts1,pts2)
+        partImg_info[idx] = {'img':partImg,'height':calc_quad_height(pts1)}
+        idx+=1
         # plt.imshow(partImg), plt.colorbar(), plt.show()
-        partImgs.append(partImg)
-    return partImgs
+    return partImg_info
 
 ## Define some configuration variables:
 NUM_IMG = -1 # no. of images to use for generation (-1 to use all available):
@@ -132,11 +171,14 @@ def add_res_to_disk(imgname,res,img_filepath,txtfile):
     word_list=[]
     for i in word_tmp:
         word_list+=i.split('\n')
-    synthtext_imgs=synthtext_part(img.copy(),wordBB)
-    for i in range(len(synthtext_imgs)):
-      part_img=synthtext_imgs[i]
+    synthtext_imgs_info=synthtext_part(img.copy(),wordBB)
+    for i in range(len(synthtext_imgs_info)):
+      img_info=synthtext_imgs_info[i]
+      part_img = img_info['img']
+      img_height = img_info['height']
+      h,w = part_img.shape[:2]
       word=word_list[i]
-      if part_img.shape[0]>10 and part_img.shape[1]>10:
+      if part_img is not None and img_height>=18 and w/h>=0.75*len(word) and part_img.shape[0]>10 and part_img.shape[1]>10:
         cv.imwrite(img_filepath+imgname+'_'+str(i)+'_'+ticks+'.jpg',cv.cvtColor(part_img, cv.COLOR_RGB2BGR))
         txtfile.write(word+','+imgname+'_'+str(i)+'_'+ticks+'.jpg'+'\r\n')
 
