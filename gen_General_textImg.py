@@ -176,7 +176,9 @@ def add_res_to_disk(imgname,res,img_filepath,txtfile):
       img_info=synthtext_imgs_info[i]
       part_img = img_info['img']
       img_height = img_info['height']
-      h,w = part_img.shape[:2] if part_img is not None else 0,0
+      h,w = 0,0
+      if part_img is not None:
+          h,w = part_img.shape[:2]
       word=word_list[i]
       if part_img is not None and img_height>=18 and w/h>=0.75*len(word) and part_img.shape[0]>10 and part_img.shape[1]>10:
         cv.imwrite(img_filepath+imgname+'_'+str(i)+'_'+ticks+'.jpg',cv.cvtColor(part_img, cv.COLOR_RGB2BGR))
