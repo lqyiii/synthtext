@@ -271,7 +271,7 @@ def main(generate_count=10):
 
               if len(res) > 0:
                   # non-empty : successful in placing text:
-                  add_res_to_db(img_name, res, out_db)
+                  # add_res_to_db(img_name, res, out_db)
                   add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
                   break
               else:
