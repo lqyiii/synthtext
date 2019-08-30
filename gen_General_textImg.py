@@ -180,7 +180,7 @@ def add_res_to_disk(imgname,res,img_filepath,txtfile):
       if part_img is not None:
           h,w = part_img.shape[:2]
       word=word_list[i]
-      if part_img is not None and img_height>=18 and w/h>=0.75*len(word) and part_img.shape[0]>10 and part_img.shape[1]>10:
+      if part_img is not None and img_height>=18 and w/h>=0.7*len(word) and part_img.shape[0]>10 and part_img.shape[1]>10:
         cv.imwrite(img_filepath+imgname+'_'+str(i)+'_'+ticks+'.jpg',cv.cvtColor(part_img, cv.COLOR_RGB2BGR))
         txtfile.write(word+','+imgname+'_'+str(i)+'_'+ticks+'.jpg'+'\r\n')
 
@@ -211,7 +211,7 @@ def random_choose(imnames,db_seg,db_depth,max_index=8009):
     return rgb_img,seg,depth,img_name
 
 
-def main(generate_count=10):
+def main(generate_count=50):
   ticks_str=str(int(time.time()))
   # open databases:
   db_depth = h5py.File('./data/download/depth.h5', 'r')
