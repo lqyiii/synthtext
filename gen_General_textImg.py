@@ -182,7 +182,7 @@ def add_res_to_disk(imgname,res,img_filepath,txtfile):
       word=word_list[i]
       if part_img is not None and img_height>=18 and w/h>=0.7*len(word) and part_img.shape[0]>10 and part_img.shape[1]>10:
         cv.imwrite(img_filepath+imgname+'_'+str(i)+'_'+ticks+'.jpg',cv.cvtColor(part_img, cv.COLOR_RGB2BGR))
-        txtfile.write(word+','+imgname+'_'+str(i)+'_'+ticks+'.jpg'+'\r\n')
+        txtfile.write(word+'\t'+imgname+'_'+str(i)+'_'+ticks+'.jpg'+'\r\n')
 
 def rgb2hsv(image):
     return image.convert('HSV')
@@ -211,7 +211,11 @@ def random_choose(imnames,db_seg,db_depth,max_index=8009):
     return rgb_img,seg,depth,img_name
 
 
-def main(generate_count=50):
+def main(generate_count=50,
+         text_source_path=osp.join(DATA_PATH,'text_source/'),
+         img_txt_filename='./data/words/label_general_imgs_190829_v1.txt',
+         img_folder='./data/general_imgs_190829_v1/'):
+
   ticks_str=str(int(time.time()))
   # open databases:
   db_depth = h5py.File('./data/download/depth.h5', 'r')
@@ -219,15 +223,14 @@ def main(generate_count=50):
   imnames = pkl.load(open('./data/download/imnames.cp', 'r'))
   
   # open the output h5 file:
-  img_folder = './data/general_imgs/'
-  txtfile=codecs.open('./data/words/label_nums_'+ticks_str+'.txt','aw+','utf-8')
+  txtfile=codecs.open(img_txt_filename,'aw+','utf-8')
   out_db = h5py.File(OUT_FILE,'w')
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
 
   RV3 = RendererV3(DATA_PATH,
                    max_time=SECS_PER_IMG,
-                   TextPath=TEXTPATH,
+                   TextPath=text_source_path,
                    min_char_height=16,
                    max_text_regions=10,
                    min_nchar=2,
@@ -254,7 +257,6 @@ def main(generate_count=50):
           # print 'gray',gray.shape,gray
           depth = (np.max(depth) / np.max(gray)) * gray.astype('float32')
           kernel = np.ones((5, 5), np.float32) / 25
-          gray = cv2.filter2D(gray, -1, kernel)
 
           # get segmentation:
           seg = seg_[:].astype('float32')
@@ -290,4 +292,6 @@ def main(generate_count=50):
 
 
 if __name__=='__main__':
-    main()
+    main(generate_count=200000,
+         text_source_path=osp.join(DATA_PATH,'text_source_0829/'),
+         )
