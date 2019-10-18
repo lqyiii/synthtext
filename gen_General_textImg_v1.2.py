@@ -260,8 +260,6 @@ def main(generate_count=50,
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
 
-  RendererV3.intersection_point()
-
   RV3 = RendererV3(DATA_PATH,
                    max_time=SECS_PER_IMG,
                    TextPath=text_source_path,
