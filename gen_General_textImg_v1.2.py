@@ -129,7 +129,7 @@ def synthtext_part(img,wordBB):
             idx+=1
             continue
 
-        rec = extend_randomly_bounding_box(rec)
+        rec = extend_randomly_bounding_box(rec,max_w_extension_rate=0.2,max_h_extension_rate=0.2)
         pt1 = (max(rec[0],0), max(rec[1],0))
         pt2 = (min(rec[2],W), max(rec[3],0))
         pt3 = (min(rec[4],W), min(rec[5],H))
