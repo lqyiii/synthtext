@@ -246,7 +246,7 @@ def random_choose(imnames,db_seg,db_depth,max_index=8009):
 def main(generate_count=50,
          text_source_path=osp.join(DATA_PATH,'text_source/'),
          img_txt_filename='./data/words/label_general_imgs_190829_v1.txt',
-         img_folder='./data/general_imgs_190829_v1/'):
+         img_folder='./data/general_imgs_190829_v1.2/'):
 
   ticks_str=str(int(time.time()))
   # open databases:
@@ -307,8 +307,8 @@ def main(generate_count=50,
 
               if len(res) > 0:
                   # non-empty : successful in placing text:
-                  add_res_to_db(img_name, res, out_db)
-                  #add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
+                  #add_res_to_db(img_name, res, out_db)
+                  add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
                   break
               else:
                   res = RV3.render_text(img, depth, seg, area, label,
