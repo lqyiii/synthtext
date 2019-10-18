@@ -324,6 +324,6 @@ def main(generate_count=50,
 
 
 if __name__=='__main__':
-    main(generate_count=50,
+    main(generate_count=200000,
          text_source_path=osp.join(DATA_PATH,'text_source_0829/'),
          )
