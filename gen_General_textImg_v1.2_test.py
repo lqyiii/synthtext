@@ -307,8 +307,8 @@ def main(generate_count=50,
 
               if len(res) > 0:
                   # non-empty : successful in placing text:
-                  #add_res_to_db(img_name, res, out_db)
-                  add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
+                  add_res_to_db(img_name, res, out_db)
+                  #add_res_to_disk(img_name, deepcopy(res), img_folder, txtfile)
                   break
               else:
                   res = RV3.render_text(img, depth, seg, area, label,
@@ -324,6 +324,6 @@ def main(generate_count=50,
 
 
 if __name__=='__main__':
-    main(generate_count=200000,
+    main(generate_count=50,
          text_source_path=osp.join(DATA_PATH,'text_source_0829/'),
          )
